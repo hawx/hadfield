@@ -34,3 +34,17 @@ func (c *Command) PrintUsage(templates Templates) {
 func (c *Command) Runnable() bool {
 	return c.Run != nil
 }
+
+func (c *Command) Call(cmd *Command, templates Templates, args []string) {
+	c.Flag.Usage = func() { cmd.PrintUsage(templates) }
+
+	if c.CustomFlags {
+		args = args[1:]
+	} else {
+		c.Flag.Parse(args[1:])
+		args = c.Flag.Args()
+	}
+
+	c.Run(c, args)
+	os.Exit(0)
+}

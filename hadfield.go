@@ -25,16 +25,8 @@ func Run(cmds Commands, templates Templates) {
 	}
 
 	for _, cmd := range cmds {
-		if cmd.Name() == args[0] && cmd.Run != nil {
-			cmd.Flag.Usage = func() { cmd.PrintUsage(templates) }
-			if cmd.CustomFlags {
-				args = args[1:]
-			} else {
-				cmd.Flag.Parse(args[1:])
-				args = cmd.Flag.Args()
-			}
-			cmd.Run(cmd, args)
-			os.Exit(0)
+		if cmd.Name() == args[0] && cmd.Runnable() == true {
+			cmd.Call(cmd, templates, args)
 		}
 	}
 
