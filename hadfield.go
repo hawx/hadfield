@@ -1,7 +1,6 @@
 package hadfield
 
 import (
-	"io"
 	"os"
 	"fmt"
 	"flag"
@@ -34,18 +33,14 @@ func Run(cmds Commands, templates Templates) {
 	os.Exit(2)
 }
 
-func printUsage(w io.Writer, templates Templates, cmds Commands) {
-	templates.Usage.Render(w, cmds)
-}
-
 func usage(templates Templates, cmds Commands) {
-	printUsage(os.Stderr, templates, cmds)
+	templates.Usage.Render(os.Stderr, cmds)
 	os.Exit(0)
 }
 
 func help(templates Templates, cmds Commands, args []string) {
 	if len(args) == 0 {
-		printUsage(os.Stdout, templates, cmds)
+		templates.Usage.Render(os.Stdout, cmds)
 		return
 	}
 	if len(args) != 1 {
