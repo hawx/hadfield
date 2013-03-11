@@ -34,18 +34,18 @@ func Run(cmds Commands, templates Templates) {
 	os.Exit(2)
 }
 
-func printUsage(w io.Writer, tmpls Templates, cmds Commands) {
-	tmpl(w, tmpls.Usage, cmds)
+func printUsage(w io.Writer, templates Templates, cmds Commands) {
+	templates.Usage.Render(w, cmds)
 }
 
-func usage(tmpls Templates, cmds Commands) {
-	printUsage(os.Stderr, tmpls, cmds)
+func usage(templates Templates, cmds Commands) {
+	printUsage(os.Stderr, templates, cmds)
 	os.Exit(0)
 }
 
-func help(tmpls Templates, cmds Commands, args []string) {
+func help(templates Templates, cmds Commands, args []string) {
 	if len(args) == 0 {
-		printUsage(os.Stdout, tmpls, cmds)
+		printUsage(os.Stdout, templates, cmds)
 		return
 	}
 	if len(args) != 1 {
@@ -56,7 +56,7 @@ func help(tmpls Templates, cmds Commands, args []string) {
 
 	for _, cmd := range cmds {
 		if cmd.Name() == arg {
-			tmpl(os.Stdout, tmpls.Help, cmd)
+			templates.Help.Render(os.Stdout, cmd)
 			return
 		}
 	}

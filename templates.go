@@ -9,14 +9,20 @@ import (
 )
 
 type Templates struct {
-	Usage  string
-	Help   string
+	Usage  Template
+	Help   Template
 }
 
-func tmpl(w io.Writer, text string, data interface{}) {
+type Template string
+
+func (text *Template) Render(w io.Writer, data interface{}) {
 	t := template.New("top")
-	t.Funcs(template.FuncMap{"trim": strings.TrimSpace, "capitalize": capitalize})
-	template.Must(t.Parse(text))
+	t.Funcs(template.FuncMap{
+		"trim": strings.TrimSpace,
+		"capitalize": capitalize,
+	})
+
+	template.Must(t.Parse(string(*text)))
 	if err := t.Execute(w, data); err != nil {
 		panic(err)
 	}
