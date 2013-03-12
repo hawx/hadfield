@@ -30,7 +30,7 @@ func Run(cmds Commands, templates Templates) {
 	}
 
 	for _, cmd := range cmds {
-		if cmd.Name() == args[0] && cmd.Runnable() == true {
+		if cmd.Name() == args[0] && cmd.Callable() {
 			cmd.Call(cmd, templates, args)
 		}
 	}
@@ -51,7 +51,7 @@ func usage(templates Templates, cmds Commands) {
 // a signle argument. And otherwise exists with an error.
 func help(templates Templates, cmds Commands, args []string) {
 	if len(args) == 0 {
-		templates.Usage.Render(os.Stdout, cmds)
+		templates.Usage.Render(os.Stdout, cmds.Data())
 		return
 	}
 	if len(args) != 1 {

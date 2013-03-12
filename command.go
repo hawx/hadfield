@@ -7,10 +7,33 @@ import (
 )
 
 type Interface interface {
-	Name() string
-	Data() interface{}
-	Runnable() bool
+	Name()      string
+	Data()      interface{}
+	Category()  string
+	Callable()  bool
 	Call(cmd Interface, templates Templates, args []string)
+}
+
+func PrintUsage(c Interface, templates Templates) {
+	templates.Help.Render(os.Stdout, c.Data())
+	os.Exit(0)
+}
+
+type Commands []Interface
+
+func (cs Commands) PrintUsage(templates Templates) {
+	templates.Usage.Render(os.Stderr, cs)
+	os.Exit(0)
+}
+
+func (cs Commands) Data() []interface{} {
+	is := make([]interface{}, len(cs))
+
+	for i,c := range cs {
+		is[i] = c.Data()
+	}
+
+	return is
 }
 
 type Command struct {
@@ -33,8 +56,6 @@ type Command struct {
 	CustomFlags  bool
 }
 
-type Commands []Interface
-
 func (c *Command) Name() string {
 	name := c.Usage
 	i := strings.Index(name, " ")
@@ -44,17 +65,19 @@ func (c *Command) Name() string {
 	return name
 }
 
-func printUsage(c Interface, templates Templates) {
-	templates.Help.Render(os.Stdout, c.Data())
-	os.Exit(0)
+func (c *Command) Category() string {
+	if c.Run != nil {
+		return "Runnable"
+	}
+	return ""
 }
 
-func (c *Command) Runnable() bool {
-	return c.Run != nil
+func (c *Command) Callable() bool {
+	return c.Category() == "Runnable"
 }
 
 func (c *Command) Call(cmd Interface, templates Templates, args []string) {
-	c.Flag.Usage = func() { printUsage(cmd, templates) }
+	c.Flag.Usage = func() { PrintUsage(cmd, templates) }
 
 	if c.CustomFlags {
 		args = args[1:]
@@ -68,5 +91,12 @@ func (c *Command) Call(cmd Interface, templates Templates, args []string) {
 }
 
 func (c *Command) Data() interface{} {
-	return c
+	return map[string]interface{}{
+		"Callable": c.Callable(),
+		"Category": c.Category(),
+		"Usage":    c.Usage,
+		"Short":    c.Short,
+		"Long":     c.Long,
+		"Name":     c.Name(),
+	}
 }
