@@ -45,6 +45,7 @@ func usage(templates Templates, cmds Commands) {
 	os.Exit(0)
 }
 
+
 // help controls the "help" pseudo-command. It will print the usage message if
 // given an empty list of arguments. It prints the associated help text if given
 // a signle argument. And otherwise exists with an error.
