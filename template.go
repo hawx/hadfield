@@ -18,8 +18,9 @@ type Template string
 func (text *Template) Render(w io.Writer, data interface{}) {
 	t := template.New("top")
 	t.Funcs(template.FuncMap{
-		"trim": strings.TrimSpace,
+		"trim":       strings.TrimSpace,
 		"capitalize": capitalize,
+		"category":   category,
 	})
 
 	template.Must(t.Parse(string(*text)))
@@ -34,4 +35,9 @@ func capitalize(s string) string {
 	}
 	r,n := utf8.DecodeRuneInString(s)
 	return string(unicode.ToTitle(r)) + s[n:]
+}
+
+func category(i map[string]interface{}, s string) bool {
+	k, ok := i["Category"]
+	return ok && k == s
 }
