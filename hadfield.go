@@ -41,7 +41,7 @@ func Run(cmds Commands, templates Templates) {
 
 // usage prints a usage message and then exits.
 func usage(templates Templates, cmds Commands) {
-	templates.Usage.Render(os.Stderr, cmds)
+	templates.Usage.Render(os.Stderr, cmds.Data())
 	os.Exit(0)
 }
 
@@ -63,7 +63,7 @@ func help(templates Templates, cmds Commands, args []string) {
 
 	for _, cmd := range cmds {
 		if cmd.Name() == arg {
-			templates.Help.Render(os.Stdout, cmd)
+			templates.Help.Render(os.Stdout, cmd.Data())
 			return
 		}
 	}
