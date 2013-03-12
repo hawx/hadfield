@@ -1,5 +1,5 @@
 // Package hadfield implements a basic subcommand system to complement the
-// standard libraries 'flag' package. To use, in your 'main' function you must
+// standard library's 'flag' package. To use, in your 'main' function you must
 // call the Run function with a list of Commands and Templates.
 package hadfield
 
