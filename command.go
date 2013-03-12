@@ -67,13 +67,13 @@ func (c *Command) Name() string {
 
 func (c *Command) Category() string {
 	if c.Run != nil {
-		return "Runnable"
+		return "Command"
 	}
-	return ""
+	return "Documentation"
 }
 
 func (c *Command) Callable() bool {
-	return c.Category() == "Runnable"
+	return c.Category() == "Command"
 }
 
 func (c *Command) Call(cmd Interface, templates Templates, args []string) {
