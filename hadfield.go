@@ -32,6 +32,7 @@ func Run(cmds Commands, templates Templates) {
 	for _, cmd := range cmds {
 		if cmd.Name() == args[0] && cmd.Callable() {
 			cmd.Call(cmd, templates, args)
+			os.Exit(0)
 		}
 	}
 
