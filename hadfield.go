@@ -14,14 +14,14 @@ import (
 // the help function below. If it can not find a subcommand with the name given
 // it exits with an error.
 func Run(cmds Commands, templates Templates) {
-	flag.Usage = func() { usage(templates, cmds) }
+	flag.Usage = func() { Usage(cmds, templates) }
 	flag.Parse()
 	log.SetFlags(0)
 
 	args := flag.Args()
 
 	if len(args) < 1 {
-		usage(templates, cmds)
+		Usage(cmds, templates)
 	}
 
 	if args[0] == "help" {
@@ -40,12 +40,11 @@ func Run(cmds Commands, templates Templates) {
 	os.Exit(2)
 }
 
-// usage prints a usage message and then exits.
-func usage(templates Templates, cmds Commands) {
+// Usage prints a usage message and then exits.
+func Usage(cmds Commands, templates Templates) {
 	templates.Usage.Render(os.Stderr, cmds.Data())
 	os.Exit(0)
 }
-
 
 // help controls the "help" pseudo-command. It will print the usage message if
 // given an empty list of arguments. It prints the associated help text if given

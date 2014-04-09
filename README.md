@@ -73,7 +73,7 @@ Usage: `usage: test [command] [arguments]
   This is a test.
 
   Commands: {{range .}}
-    {{.Name | printf "%-15s"}} # {{.Short}}{{end}
+    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}
 `,
 Help: `usage: test {{.Usage}}
 {{.Long}}
