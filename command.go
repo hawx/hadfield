@@ -21,11 +21,6 @@ func PrintUsage(c Interface, templates Templates) {
 
 type Commands []Interface
 
-func (cs Commands) PrintUsage(templates Templates) {
-	templates.Usage.Render(os.Stderr, cs)
-	os.Exit(0)
-}
-
 func (cs Commands) Data() []interface{} {
 	is := make([]interface{}, len(cs))
 
