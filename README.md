@@ -1,4 +1,4 @@
-# Hadfield
+# Hadfield [![docs](http://godoc.org/github.com/hawx/hadfield?status.svg)](http://godoc.org/github.com/hawx/hadfield)
 
 A basic subcommands to complement the [flag package][flag].
 
