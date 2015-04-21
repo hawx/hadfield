@@ -1,16 +1,16 @@
 package hadfield
 
 import (
-	"text/template"
+	"io"
 	"strings"
+	"text/template"
 	"unicode"
 	"unicode/utf8"
-	"io"
 )
 
 type Templates struct {
-	Usage  Template
-	Help   Template
+	Usage Template
+	Help  Template
 }
 
 type Template string
@@ -33,7 +33,7 @@ func capitalize(s string) string {
 	if s == "" {
 		return s
 	}
-	r,n := utf8.DecodeRuneInString(s)
+	r, n := utf8.DecodeRuneInString(s)
 	return string(unicode.ToTitle(r)) + s[n:]
 }
 

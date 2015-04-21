@@ -2,21 +2,21 @@ package hadfield
 
 import (
 	"flag"
-	"strings"
 	"os"
+	"strings"
 )
 
 type Interface interface {
-	Name()      string
-	Data()      interface{}
-	Category()  string
-	Callable()  bool
+	Name() string
+	Data() interface{}
+	Category() string
+	Callable() bool
 	Call(cmd Interface, templates Templates, args []string)
 }
 
 func PrintUsage(c Interface, templates Templates) {
 	templates.Help.Render(os.Stdout, c.Data())
-	os.Exit(0)
+	Exit(0)
 }
 
 type Commands []Interface
@@ -24,7 +24,7 @@ type Commands []Interface
 func (cs Commands) Data() []interface{} {
 	is := make([]interface{}, len(cs))
 
-	for i,c := range cs {
+	for i, c := range cs {
 		is[i] = c.Data()
 	}
 
@@ -34,21 +34,21 @@ func (cs Commands) Data() []interface{} {
 type Command struct {
 	// Run runs the command. It is passed the list of args that came after the
 	// command name.
-	Run          func(cmd *Command, args []string)
+	Run func(cmd *Command, args []string)
 
 	// Usage returns the one-line usage string. The first word on the line is
 	// taken to be the command name.
-	Usage        string
+	Usage string
 
 	// Short is a single line description used in the help listing.
-	Short        string
+	Short string
 
 	// Long is the detailed and formatted message shown in the full help for the
 	// command.
-	Long         string
+	Long string
 
-	Flag         flag.FlagSet
-	CustomFlags  bool
+	Flag        flag.FlagSet
+	CustomFlags bool
 }
 
 func (c *Command) Name() string {
@@ -82,7 +82,7 @@ func (c *Command) Call(cmd Interface, templates Templates, args []string) {
 	}
 
 	c.Run(c, args)
-	os.Exit(0)
+	Exit(0)
 }
 
 func (c *Command) Data() interface{} {
