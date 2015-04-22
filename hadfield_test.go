@@ -12,6 +12,20 @@ import (
 
 var nilRun = func(c *hadfield.Command, args []string) {}
 
+func captureStdout(f func()) string {
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	f()
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = oldStdout
+
+	return string(out)
+}
+
 func TestHadfield(t *testing.T) {
 	receivedArgs := make(chan []string, 1)
 
@@ -117,19 +131,11 @@ func TestHadfieldHelp(t *testing.T) {
     bye             # bye goes away
 `
 
-	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	os.Args = []string{"me", "help"}
-	hadfield.Exit = func(_ int) {}
-	hadfield.Run(cmds, templates)
-
-	w.Close()
-	out, _ := ioutil.ReadAll(r)
-	os.Stdout = oldStdout
-
-	assert.Equal(t, expectedOut, string(out))
+	assert.Equal(t, expectedOut, captureStdout(func() {
+		os.Args = []string{"me", "help"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, templates)
+	}))
 }
 
 func TestHadfieldHelpCommand(t *testing.T) {
@@ -167,17 +173,70 @@ func TestHadfieldHelpCommand(t *testing.T) {
 
 `
 
-	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	assert.Equal(t, expectedOut, captureStdout(func() {
+		os.Args = []string{"me", "help", "hey"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, templates)
+	}))
+}
 
-	os.Args = []string{"me", "help", "hey"}
-	hadfield.Exit = func(_ int) {}
-	hadfield.Run(cmds, templates)
+func TestHadfieldHelpNonCallable(t *testing.T) {
+	cmds := hadfield.Commands{
+		&hadfield.Command{
+			Usage: "hey",
+			Short: "hey does other stuff",
+			Long: `
+This is actually just documentation about the "hey" system.
+`,
+		},
+		&hadfield.Command{
+			Usage: "hey",
+			Short: "runs hey",
+			Run:   nilRun,
+		},
+	}
 
-	w.Close()
-	out, _ := ioutil.ReadAll(r)
-	os.Stdout = oldStdout
+	var templates = hadfield.Templates{
+		Usage: `usage: test [command] [arguments]
 
-	assert.Equal(t, expectedOut, string(out))
+  This is a test.
+
+  Commands:{{range .}}{{if .Callable}}
+    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}{{end}}
+
+  Additional help:{{range .}}{{if not .Callable}}
+    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}{{end}}
+`,
+		Help: `{{if .Callable}}usage: test {{.Usage}}
+{{end}}{{.Long}}
+`,
+	}
+
+	expectedUsage := `usage: test [command] [arguments]
+
+  This is a test.
+
+  Commands:
+    hey             # runs hey
+
+  Additional help:
+    hey             # hey does other stuff
+`
+
+	expectedTopic := `
+This is actually just documentation about the "hey" system.
+
+`
+
+	assert.Equal(t, expectedUsage, captureStdout(func() {
+		os.Args = []string{"me", "help"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, templates)
+	}))
+
+	assert.Equal(t, expectedTopic, captureStdout(func() {
+		os.Args = []string{"me", "help", "hey"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, templates)
+	}))
 }
