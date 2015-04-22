@@ -1,5 +1,5 @@
 // Package hadfield implements a basic subcommand system to complement the
-// standard library's 'flag' package.
+// flag package.
 package hadfield
 
 import (

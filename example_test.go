@@ -1,4 +1,4 @@
-package main
+package hadfield_test
 
 import (
 	"fmt"
@@ -55,6 +55,6 @@ var commands = hadfield.Commands{
 	cmdGreet,
 }
 
-func main() {
+func Example() {
 	hadfield.Run(commands, templates)
 }
