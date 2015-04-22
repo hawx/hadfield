@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/hawx/hadfield"
 	"fmt"
 	"os"
+
+	"hawx.me/code/hadfield"
 )
 
 var cmdGreet = &hadfield.Command{
-  Usage: "greet [options]",
-  Short: "displays a greeting",
-  Long: `
+	Usage: "greet [options]",
+	Short: "displays a greeting",
+	Long: `
   Greet displays a formatted greeting to a person in the language specified.
 
     --person <name>     # Name of person to greet
@@ -34,24 +35,24 @@ func init() {
 	cmdGreet.Run = runGreet
 
 	cmdGreet.Flag.StringVar(&greetPerson, "person", "someone?", "")
-	cmdGreet.Flag.StringVar(&greetLang,   "lang", "en", "")
+	cmdGreet.Flag.StringVar(&greetLang, "lang", "en", "")
 }
 
 var templates = hadfield.Templates{
-Usage: `usage: example [command] [arguments]
+	Usage: `usage: example [command] [arguments]
 
   This is an example.
 
   Commands: {{range .}}
     {{.Name | printf "%-15s"}} # {{.Short}}{{end}}
 `,
-Help: `usage: example {{.Usage}}
+	Help: `usage: example {{.Usage}}
 {{.Long}}
 `,
 }
 
 var commands = hadfield.Commands{
-  cmdGreet,
+	cmdGreet,
 }
 
 func main() {
