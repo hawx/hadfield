@@ -41,8 +41,8 @@ type Interface interface {
 	Call(cmd Interface, templates Templates, args []string)
 }
 
-// PrintUsage displays a help message for the subcommand to Stdout, then exits.
-func PrintUsage(c Interface, templates Templates) {
+// CommandUsage displays a help message for the subcommand to Stdout, then exits.
+func CommandUsage(c Interface, templates Templates) {
 	templates.Help.Render(os.Stdout, c.Data())
 	Exit(0)
 }
@@ -105,7 +105,7 @@ func (c *Command) Callable() bool {
 // Call parses the flags if CustomFlags is not set, then calls the function
 // defined by Run, and finally exits.
 func (c *Command) Call(cmd Interface, templates Templates, args []string) {
-	c.Flag.Usage = func() { PrintUsage(cmd, templates) }
+	c.Flag.Usage = func() { CommandUsage(cmd, templates) }
 
 	if c.CustomFlags {
 		args = args[1:]

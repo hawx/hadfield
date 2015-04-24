@@ -51,7 +51,7 @@ func Run(cmds Commands, templates Templates) {
 
 // Usage prints a usage message and then exits.
 func Usage(cmds Commands, templates Templates) {
-	templates.Usage.Render(os.Stderr, cmds.Data())
+	templates.Help.Render(os.Stderr, cmds.Data())
 	Exit(0)
 }
 
@@ -60,7 +60,7 @@ func Usage(cmds Commands, templates Templates) {
 // a signle argument. And otherwise exists with an error.
 func help(templates Templates, cmds Commands, args []string) {
 	if len(args) == 0 {
-		templates.Usage.Render(os.Stdout, cmds.Data())
+		templates.Help.Render(os.Stdout, cmds.Data())
 		return
 	}
 	if len(args) != 1 {
@@ -72,7 +72,7 @@ func help(templates Templates, cmds Commands, args []string) {
 
 	for _, cmd := range cmds {
 		if cmd.Name() == arg {
-			templates.Help.Render(os.Stdout, cmd.Data())
+			templates.Command.Render(os.Stdout, cmd.Data())
 			return
 		}
 	}

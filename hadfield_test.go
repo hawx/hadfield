@@ -112,12 +112,12 @@ func TestHadfieldHelp(t *testing.T) {
 	}
 
 	var templates = hadfield.Templates{
-		Usage: `usage: test [command] [arguments]
+		Help: `usage: test [command] [arguments]
 
   This is a test.
 
   Commands:{{range .}}
-    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}
+    {{.Name | printf "%-15s"}} # {{.Short | capitalize}}{{end}}
 `,
 	}
 
@@ -126,9 +126,9 @@ func TestHadfieldHelp(t *testing.T) {
   This is a test.
 
   Commands:
-    he              # he does stuff
-    hey             # hey does other stuff
-    bye             # bye goes away
+    he              # He does stuff
+    hey             # Hey does other stuff
+    bye             # Bye goes away
 `
 
 	assert.Equal(t, expectedOut, captureStdout(func() {
@@ -158,8 +158,9 @@ func TestHadfieldHelpCommand(t *testing.T) {
 	cmds := hadfield.Commands{cmd}
 
 	var templates = hadfield.Templates{
-		Help: `usage: test {{.Usage}}
-{{.Long}}
+		Command: `usage: test {{.Usage}}
+
+  {{.Long | trim}}
 `,
 	}
 
@@ -170,7 +171,6 @@ func TestHadfieldHelpCommand(t *testing.T) {
   Options:
     --later WHEN   # later is cool for now, BUT LATER (default: cool)
     --now REALLY   # now does stuff right NOW
-
 `
 
 	assert.Equal(t, expectedOut, captureStdout(func() {
@@ -197,18 +197,18 @@ This is actually just documentation about the "hey" system.
 	}
 
 	var templates = hadfield.Templates{
-		Usage: `usage: test [command] [arguments]
+		Help: `usage: test [command] [arguments]
 
   This is a test.
 
-  Commands:{{range .}}{{if .Callable}}
+  Commands:{{range .}}{{if eq .Category "Command"}}
     {{.Name | printf "%-15s"}} # {{.Short}}{{end}}{{end}}
 
   Additional help:{{range .}}{{if not .Callable}}
     {{.Name | printf "%-15s"}} # {{.Short}}{{end}}{{end}}
 `,
-		Help: `{{if .Callable}}usage: test {{.Usage}}
-{{end}}{{.Long}}
+		Command: `{{if .Callable}}usage: test {{.Usage}}
+{{end}}{{.Long | trim}}
 `,
 	}
 
@@ -223,9 +223,7 @@ This is actually just documentation about the "hey" system.
     hey             # hey does other stuff
 `
 
-	expectedTopic := `
-This is actually just documentation about the "hey" system.
-
+	expectedTopic := `This is actually just documentation about the "hey" system.
 `
 
 	assert.Equal(t, expectedUsage, captureStdout(func() {

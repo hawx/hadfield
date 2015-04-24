@@ -39,14 +39,14 @@ func init() {
 }
 
 var templates = hadfield.Templates{
-	Usage: `usage: example [command] [arguments]
+	Help: `usage: example [command] [arguments]
 
   This is an example.
 
   Commands: {{range .}}
     {{.Name | printf "%-15s"}} # {{.Short}}{{end}}
 `,
-	Help: `usage: example {{.Usage}}
+	Command: `usage: example {{.Usage}}
 {{.Long}}
 `,
 }
