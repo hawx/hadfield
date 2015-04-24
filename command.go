@@ -6,14 +6,42 @@ import (
 	"strings"
 )
 
+// Interface defines the common behaviour of subcommands. The default
+// implementation is Command, but it is possible to mix these with other types
+// of subcommand such as those dynamically discovered when used.
 type Interface interface {
+	// Name is the word used to call the subcommand.
 	Name() string
+
+	// Data is used when rendering help and usage templates. Values that should be
+	// expected are:
+	//
+	// Callable:
+	//   i.e. Callable()
+	// Category:
+	//   i.e. Category().
+	// Usage:
+	//   The string starting with the commands name.
+	// Short:
+	//   A short, one-line, description.
+	// Long:
+	//   A long description.
+	// Name:
+	//   i.e. Name().
 	Data() interface{}
+
+	// Category is the type of subcommand, it can be anything and can be used to
+	// group subcommands together.
 	Category() string
+
+	// Callable is true if the Call() method actually does something.
 	Callable() bool
+
+	// Call runs the subcommand.
 	Call(cmd Interface, templates Templates, args []string)
 }
 
+// PrintUsage displays a help message for the subcommand to Stdout, then exits.
 func PrintUsage(c Interface, templates Templates) {
 	templates.Help.Render(os.Stdout, c.Data())
 	Exit(0)
@@ -51,6 +79,7 @@ type Command struct {
 	CustomFlags bool
 }
 
+// Name returns the first word in Usage.
 func (c *Command) Name() string {
 	name := c.Usage
 	i := strings.Index(name, " ")
@@ -60,6 +89,7 @@ func (c *Command) Name() string {
 	return name
 }
 
+// Category returns "Command" if Run is defined, and otherwise "Documentation".
 func (c *Command) Category() string {
 	if c.Run != nil {
 		return "Command"
@@ -67,10 +97,13 @@ func (c *Command) Category() string {
 	return "Documentation"
 }
 
+// Callable returns true if Run is defined, and false otherwise.
 func (c *Command) Callable() bool {
-	return c.Category() == "Command"
+	return c.Run != nil
 }
 
+// Call parses the flags if CustomFlags is not set, then calls the function
+// defined by Run, and finally exits.
 func (c *Command) Call(cmd Interface, templates Templates, args []string) {
 	c.Flag.Usage = func() { PrintUsage(cmd, templates) }
 
@@ -85,13 +118,23 @@ func (c *Command) Call(cmd Interface, templates Templates, args []string) {
 	Exit(0)
 }
 
+type cmdData struct {
+	Callable bool
+	Category string
+	Usage    string
+	Short    string
+	Long     string
+	Name     string
+}
+
+// Data returns the information required for rendering the help templates.
 func (c *Command) Data() interface{} {
-	return map[string]interface{}{
-		"Callable": c.Callable(),
-		"Category": c.Category(),
-		"Usage":    c.Usage,
-		"Short":    c.Short,
-		"Long":     c.Long,
-		"Name":     c.Name(),
+	return cmdData{
+		Callable: c.Callable(),
+		Category: c.Category(),
+		Usage:    c.Usage,
+		Short:    c.Short,
+		Long:     c.Long,
+		Name:     c.Name(),
 	}
 }

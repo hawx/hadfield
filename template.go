@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 )
 
+// Templates defines the text/templates used for rendering help screens.
 type Templates struct {
 	Usage Template
 	Help  Template

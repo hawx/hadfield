@@ -9,12 +9,19 @@ import (
 	"os"
 )
 
-// Customisable Exit function.
+// Customisable Exit function. This is used for exiting in various places
+// throughout and can be overriden for testing purposes or to perform other
+// tasks.
 var Exit = os.Exit
 
-// Run executes the correct subcommand. It delegates the subcommand 'help' to
-// the help function below. If it can not find a subcommand with the name given
-// it exits with an error.
+// Run executes the correct subcommand.
+//
+// The special subcommand 'help' is defined and displays either the usage
+// message, or if called with an argument the help message for a particular
+// subcommand.
+//
+// If the subcommand cannot be found a message is displayed and it exits with
+// status code 2.
 func Run(cmds Commands, templates Templates) {
 	flag.Usage = func() { Usage(cmds, templates) }
 	flag.Parse()
