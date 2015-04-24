@@ -43,7 +43,7 @@ type Interface interface {
 
 // CommandUsage displays a help message for the subcommand to Stdout, then exits.
 func CommandUsage(c Interface, templates Templates) {
-	templates.Help.Render(os.Stdout, c.Data())
+	templates.Command.Render(os.Stdout, c.Data())
 	Exit(0)
 }
 
