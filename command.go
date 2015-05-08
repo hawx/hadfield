@@ -41,10 +41,9 @@ type Interface interface {
 	Call(cmd Interface, templates Templates, args []string)
 }
 
-// CommandUsage displays a help message for the subcommand to Stdout, then exits.
+// CommandUsage writes a help message for the subcommand to Stdout.
 func CommandUsage(c Interface, templates Templates) {
 	templates.Command.Render(os.Stdout, c.Data())
-	Exit(0)
 }
 
 type Commands []Interface
@@ -115,7 +114,6 @@ func (c *Command) Call(cmd Interface, templates Templates, args []string) {
 	}
 
 	c.Run(c, args)
-	Exit(0)
 }
 
 type cmdData struct {

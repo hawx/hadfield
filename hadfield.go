@@ -5,8 +5,13 @@ package hadfield
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
+)
+
+const (
+	unknownSubcommand = "unknown subcommand %q\n"
+	unknownHelpTopic  = "unknown help topic %q\n"
+	helpTooManyArgs   = "help given too many arguments\n"
 )
 
 // Customisable Exit function. This is used for exiting in various places
@@ -25,12 +30,12 @@ var Exit = os.Exit
 func Run(cmds Commands, templates Templates) {
 	flag.Usage = func() { Usage(cmds, templates) }
 	flag.Parse()
-	log.SetFlags(0)
 
 	args := flag.Args()
 
 	if len(args) < 1 {
-		Usage(cmds, templates)
+		templates.Help.Render(os.Stderr, cmds.Data())
+		Exit(1)
 	}
 
 	if args[0] == "help" {
@@ -45,14 +50,13 @@ func Run(cmds Commands, templates Templates) {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "unknown subcommand %q\n", args[0])
-	Exit(2)
+	fmt.Fprintf(os.Stderr, unknownSubcommand, args[0])
+	Exit(1)
 }
 
-// Usage prints a usage message and then exits.
+// Usage writes a help message to Stdout.
 func Usage(cmds Commands, templates Templates) {
-	templates.Help.Render(os.Stderr, cmds.Data())
-	Exit(0)
+	templates.Help.Render(os.Stdout, cmds.Data())
 }
 
 // help controls the "help" pseudo-command. It will print the usage message if
@@ -60,12 +64,12 @@ func Usage(cmds Commands, templates Templates) {
 // a signle argument. And otherwise exists with an error.
 func help(templates Templates, cmds Commands, args []string) {
 	if len(args) == 0 {
-		templates.Help.Render(os.Stdout, cmds.Data())
+		Usage(cmds, templates)
 		return
 	}
 	if len(args) != 1 {
-		fmt.Fprintf(os.Stderr, "help given too many arguments\n")
-		Exit(2)
+		fmt.Fprintf(os.Stderr, helpTooManyArgs)
+		Exit(1)
 	}
 
 	arg := args[0]
@@ -77,6 +81,6 @@ func help(templates Templates, cmds Commands, args []string) {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "Unknown help topic %#q\n", arg)
-	Exit(2)
+	fmt.Fprintf(os.Stderr, unknownHelpTopic, arg)
+	Exit(1)
 }

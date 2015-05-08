@@ -12,6 +12,20 @@ import (
 
 var nilRun = func(c *hadfield.Command, args []string) {}
 
+func captureStderr(f func()) string {
+	old := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f()
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = old
+
+	return string(out)
+}
+
 func captureStdout(f func()) string {
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -50,6 +64,18 @@ func TestHadfield(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("timeout")
 	}
+}
+
+func TestHadfieldUnknownSubcommand(t *testing.T) {
+	exitCode := -1
+
+	assert.Equal(t, "unknown subcommand \"hey\"\n", captureStderr(func() {
+		os.Args = []string{"me", "hey", "you"}
+		hadfield.Exit = func(i int) { exitCode = i }
+		hadfield.Run(hadfield.Commands{}, hadfield.Templates{})
+	}))
+
+	assert.Equal(t, 1, exitCode)
 }
 
 func TestHadfieldWithFlags(t *testing.T) {
@@ -131,11 +157,23 @@ func TestHadfieldHelp(t *testing.T) {
     bye             # Bye goes away
 `
 
+	exitCode := -1
+
 	assert.Equal(t, expectedOut, captureStdout(func() {
 		os.Args = []string{"me", "help"}
-		hadfield.Exit = func(_ int) {}
+		hadfield.Exit = func(i int) { exitCode = i }
 		hadfield.Run(cmds, templates)
 	}))
+	assert.Equal(t, -1, exitCode)
+
+	assert.Equal(t, expectedOut, captureStderr(func() {
+		os.Args = []string{"me"}
+		hadfield.Exit = func(i int) { exitCode = i; panic("") }
+
+		defer func() { recover() }()
+		hadfield.Run(cmds, templates)
+	}))
+	assert.Equal(t, 1, exitCode)
 }
 
 func TestHadfieldHelpCommand(t *testing.T) {
@@ -173,11 +211,31 @@ func TestHadfieldHelpCommand(t *testing.T) {
     --now REALLY   # now does stuff right NOW
 `
 
+	exitCode := -1
+
 	assert.Equal(t, expectedOut, captureStdout(func() {
 		os.Args = []string{"me", "help", "hey"}
-		hadfield.Exit = func(_ int) {}
+		hadfield.Exit = func(i int) { exitCode = i }
 		hadfield.Run(cmds, templates)
 	}))
+	assert.Equal(t, -1, exitCode)
+
+	assert.Equal(t, "unknown help topic \"what\"\n", captureStderr(func() {
+		os.Args = []string{"me", "help", "what"}
+		hadfield.Exit = func(i int) { exitCode = i }
+		hadfield.Run(cmds, templates)
+	}))
+	assert.Equal(t, 1, exitCode)
+
+	exitCode = -1
+	assert.Equal(t, "help given too many arguments\n", captureStderr(func() {
+		os.Args = []string{"me", "help", "what", "and"}
+		hadfield.Exit = func(i int) { exitCode = i; panic("") }
+
+		defer func() { recover() }()
+		hadfield.Run(cmds, templates)
+	}))
+	assert.Equal(t, 1, exitCode)
 }
 
 func TestHadfieldHelpNonCallable(t *testing.T) {
