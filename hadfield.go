@@ -27,24 +27,32 @@ var Exit = os.Exit
 //
 // If the subcommand cannot be found a message is displayed and it exits with
 // status code 2.
-func Run(cmds Commands, templates Templates) {
-	flag.Usage = func() { Usage(cmds, templates) }
+func Run(cmds Commands, tpcs Topics, templates Templates) {
+	flag.Usage = func() { Usage(cmds, tpcs, templates) }
 	flag.Parse()
 
 	args := flag.Args()
 
 	if len(args) < 1 {
-		templates.Help.Render(os.Stderr, cmds.Data())
+		data := struct {
+			Commands Commands
+			Topics   Topics
+		}{
+			Commands: cmds,
+			Topics:   tpcs,
+		}
+
+		templates.Help.Render(os.Stderr, data)
 		Exit(1)
 	}
 
 	if args[0] == "help" {
-		help(templates, cmds, args[1:])
+		help(templates, cmds, tpcs, args[1:])
 		return
 	}
 
 	for _, cmd := range cmds {
-		if cmd.Name() == args[0] && cmd.Callable() {
+		if cmd.Name() == args[0] {
 			cmd.Call(cmd, templates, args)
 			return
 		}
@@ -55,16 +63,24 @@ func Run(cmds Commands, templates Templates) {
 }
 
 // Usage writes a help message to Stdout.
-func Usage(cmds Commands, templates Templates) {
-	templates.Help.Render(os.Stdout, cmds.Data())
+func Usage(cmds Commands, tpcs Topics, templates Templates) {
+	data := struct {
+		Commands Commands
+		Topics   Topics
+	}{
+		Commands: cmds,
+		Topics:   tpcs,
+	}
+
+	templates.Help.Render(os.Stdout, data)
 }
 
 // help controls the "help" pseudo-command. It will print the usage message if
 // given an empty list of arguments. It prints the associated help text if given
 // a signle argument. And otherwise exists with an error.
-func help(templates Templates, cmds Commands, args []string) {
+func help(templates Templates, cmds Commands, tpcs Topics, args []string) {
 	if len(args) == 0 {
-		Usage(cmds, templates)
+		Usage(cmds, tpcs, templates)
 		return
 	}
 	if len(args) != 1 {
@@ -76,7 +92,13 @@ func help(templates Templates, cmds Commands, args []string) {
 
 	for _, cmd := range cmds {
 		if cmd.Name() == arg {
-			templates.Command.Render(os.Stdout, cmd.Data())
+			templates.Command.Render(os.Stdout, cmd)
+			return
+		}
+	}
+	for _, tpc := range tpcs {
+		if tpc.Name == arg {
+			templates.Topic.Render(os.Stdout, tpc)
 			return
 		}
 	}

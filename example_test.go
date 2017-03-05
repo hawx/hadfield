@@ -56,5 +56,5 @@ var commands = hadfield.Commands{
 }
 
 func Example() {
-	hadfield.Run(commands, templates)
+	hadfield.Run(commands, hadfield.Topics{}, templates)
 }
