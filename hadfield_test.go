@@ -56,7 +56,7 @@ func TestHadfield(t *testing.T) {
 
 	os.Args = []string{"me", "hey", "you"}
 	hadfield.Exit = func(_ int) {}
-	hadfield.Run(cmds, hadfield.Templates{})
+	hadfield.Run(cmds, hadfield.Topics{}, hadfield.Templates{})
 
 	select {
 	case args := <-receivedArgs:
@@ -72,7 +72,7 @@ func TestHadfieldUnknownSubcommand(t *testing.T) {
 	assert.Equal(t, "unknown subcommand \"hey\"\n", captureStderr(func() {
 		os.Args = []string{"me", "hey", "you"}
 		hadfield.Exit = func(i int) { exitCode = i }
-		hadfield.Run(hadfield.Commands{}, hadfield.Templates{})
+		hadfield.Run(hadfield.Commands{}, hadfield.Topics{}, hadfield.Templates{})
 	}))
 
 	assert.Equal(t, 1, exitCode)
@@ -101,7 +101,7 @@ func TestHadfieldWithFlags(t *testing.T) {
 
 	os.Args = []string{"me", "hey", "--flag", "value"}
 	hadfield.Exit = func(_ int) {}
-	hadfield.Run(cmds, hadfield.Templates{})
+	hadfield.Run(cmds, hadfield.Topics{}, hadfield.Templates{})
 
 	select {
 	case args := <-receivedArgs:
@@ -142,7 +142,7 @@ func TestHadfieldHelp(t *testing.T) {
 
   This is a test.
 
-  Commands:{{range .}}
+  Commands:{{range .Commands}}
     {{.Name | printf "%-15s"}} # {{.Short | capitalize}}{{end}}
 `,
 	}
@@ -162,7 +162,7 @@ func TestHadfieldHelp(t *testing.T) {
 	assert.Equal(t, expectedOut, captureStdout(func() {
 		os.Args = []string{"me", "help"}
 		hadfield.Exit = func(i int) { exitCode = i }
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, hadfield.Topics{}, templates)
 	}))
 	assert.Equal(t, -1, exitCode)
 
@@ -171,7 +171,7 @@ func TestHadfieldHelp(t *testing.T) {
 		hadfield.Exit = func(i int) { exitCode = i; panic("") }
 
 		defer func() { recover() }()
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, hadfield.Topics{}, templates)
 	}))
 	assert.Equal(t, 1, exitCode)
 }
@@ -216,14 +216,14 @@ func TestHadfieldHelpCommand(t *testing.T) {
 	assert.Equal(t, expectedOut, captureStdout(func() {
 		os.Args = []string{"me", "help", "hey"}
 		hadfield.Exit = func(i int) { exitCode = i }
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, hadfield.Topics{}, templates)
 	}))
 	assert.Equal(t, -1, exitCode)
 
 	assert.Equal(t, "unknown help topic \"what\"\n", captureStderr(func() {
 		os.Args = []string{"me", "help", "what"}
 		hadfield.Exit = func(i int) { exitCode = i }
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, hadfield.Topics{}, templates)
 	}))
 	assert.Equal(t, 1, exitCode)
 
@@ -233,7 +233,7 @@ func TestHadfieldHelpCommand(t *testing.T) {
 		hadfield.Exit = func(i int) { exitCode = i; panic("") }
 
 		defer func() { recover() }()
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, hadfield.Topics{}, templates)
 	}))
 	assert.Equal(t, 1, exitCode)
 }
@@ -242,15 +242,24 @@ func TestHadfieldHelpNonCallable(t *testing.T) {
 	cmds := hadfield.Commands{
 		&hadfield.Command{
 			Usage: "hey",
-			Short: "hey does other stuff",
+			Short: "runs hey",
+			Run:   nilRun,
+		},
+	}
+	tpcs := hadfield.Topics{
+		&hadfield.Topic{
+			Name:  "hey",
+			Short: "does other stuff",
 			Long: `
 This is actually just documentation about the "hey" system.
 `,
 		},
-		&hadfield.Command{
-			Usage: "hey",
-			Short: "runs hey",
-			Run:   nilRun,
+		&hadfield.Topic{
+			Name:  "hey2",
+			Short: "other hey",
+			Long: `
+What?
+`,
 		},
 	}
 
@@ -259,15 +268,18 @@ This is actually just documentation about the "hey" system.
 
   This is a test.
 
-  Commands:{{range .}}{{if eq .Category "Command"}}
-    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}{{end}}
+  Commands:{{range .Commands}}
+    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}
 
-  Additional help:{{range .}}{{if not .Callable}}
-    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}{{end}}
+  Additional help:{{range .Topics}}
+    {{.Name | printf "%-15s"}} # {{.Short}}{{end}}
 `,
-		Command: `{{if .Callable}}usage: test {{.Usage}}
-{{end}}{{.Long | trim}}
+		Command: `usage: test {{.Usage}}
+{{.Long | trim}}
 `,
+		Topic: `{{.Name}}
+
+{{.Long | trim}}`,
 	}
 
 	expectedUsage := `usage: test [command] [arguments]
@@ -278,21 +290,45 @@ This is actually just documentation about the "hey" system.
     hey             # runs hey
 
   Additional help:
-    hey             # hey does other stuff
+    hey             # does other stuff
+    hey2            # other hey
 `
 
-	expectedTopic := `This is actually just documentation about the "hey" system.
+	expectedCommand := `usage: test hey
+
 `
+
+	expectedTopic := `hey2
+
+What?`
 
 	assert.Equal(t, expectedUsage, captureStdout(func() {
 		os.Args = []string{"me", "help"}
 		hadfield.Exit = func(_ int) {}
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, tpcs, templates)
+	}))
+
+	assert.Equal(t, expectedCommand, captureStdout(func() {
+		os.Args = []string{"me", "help", "hey"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, tpcs, templates)
+	}))
+
+	assert.Equal(t, expectedCommand, captureStdout(func() {
+		os.Args = []string{"me", "hey", "-h"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, tpcs, templates)
+	}))
+
+	assert.Equal(t, expectedCommand, captureStdout(func() {
+		os.Args = []string{"me", "hey", "--help"}
+		hadfield.Exit = func(_ int) {}
+		hadfield.Run(cmds, tpcs, templates)
 	}))
 
 	assert.Equal(t, expectedTopic, captureStdout(func() {
-		os.Args = []string{"me", "help", "hey"}
+		os.Args = []string{"me", "help", "hey2"}
 		hadfield.Exit = func(_ int) {}
-		hadfield.Run(cmds, templates)
+		hadfield.Run(cmds, tpcs, templates)
 	}))
 }

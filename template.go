@@ -15,10 +15,15 @@ type Templates struct {
 	// is the one shown when "$0 help", "$0 -h" or "$0 --help" are called.
 	Help Template
 
-	// Command is the template rendered to display help for a particular
-	// subcommand, it is shown when "$0 help [subcommand]", "$0 [subcommand] -h"
-	// or "$0 [subcommand] --help" are called.
+	// Command is the template rendered to display help for a particular command,
+	// it is shown when "$0 help [command]", "$0 [command] -h" or "$0 [command]
+	// --help" are called.
 	Command Template
+
+	// Topic is the template rendered to display help for a particular document,
+	// it is shown when "$0 help [topic]", "$0 [topic] -h" or "$0 [topic] --help"
+	// are called.
+	Topic Template
 }
 
 var templateFuncs = template.FuncMap{
