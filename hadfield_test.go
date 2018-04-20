@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	hadfield "."
 	"github.com/stretchr/testify/assert"
+	hadfield "hawx.me/code/hadfield"
 )
 
 var nilRun = func(c *hadfield.Command, args []string) {}
