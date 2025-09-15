@@ -58,7 +58,7 @@ func Run(cmds Commands, templates Templates) {
 	}
 
 	fmt.Fprintf(os.Stderr, unknownSubcommand, args[0])
-	Exit(1)
+	Exit(2)
 }
 
 // Usage writes a help message to Stdout.

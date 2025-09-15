@@ -1,7 +1,7 @@
 package hadfield_test
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -20,7 +20,7 @@ func captureStderr(f func()) string {
 	f()
 
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = old
 
 	return string(out)
@@ -34,7 +34,7 @@ func captureStdout(f func()) string {
 	f()
 
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = oldStdout
 
 	return string(out)
@@ -75,7 +75,7 @@ func TestHadfieldUnknownSubcommand(t *testing.T) {
 		hadfield.Run(hadfield.Commands{}, hadfield.Templates{})
 	}))
 
-	assert.Equal(t, 1, exitCode)
+	assert.Equal(t, 2, exitCode)
 }
 
 func TestHadfieldWithFlags(t *testing.T) {
@@ -164,7 +164,7 @@ func TestHadfieldHelp(t *testing.T) {
 		hadfield.Exit = func(i int) { exitCode = i }
 		hadfield.Run(cmds, templates)
 	}))
-	assert.Equal(t, -1, exitCode)
+	assert.Equal(t, 0, exitCode)
 
 	assert.Equal(t, expectedOut, captureStderr(func() {
 		os.Args = []string{"me"}
@@ -218,7 +218,7 @@ func TestHadfieldHelpCommand(t *testing.T) {
 		hadfield.Exit = func(i int) { exitCode = i }
 		hadfield.Run(cmds, templates)
 	}))
-	assert.Equal(t, -1, exitCode)
+	assert.Equal(t, 0, exitCode)
 
 	assert.Equal(t, "unknown help topic \"what\"\n", captureStderr(func() {
 		os.Args = []string{"me", "help", "what"}
