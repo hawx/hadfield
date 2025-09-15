@@ -28,7 +28,10 @@ var Exit = os.Exit
 // If the subcommand cannot be found a message is displayed and it exits with
 // status code 2.
 func Run(cmds Commands, templates Templates) {
-	flag.Usage = func() { Usage(cmds, templates) }
+	flag.Usage = func() {
+		Usage(cmds, templates)
+		Exit(0)
+	}
 	flag.Parse()
 
 	args := flag.Args()
@@ -39,7 +42,11 @@ func Run(cmds Commands, templates Templates) {
 	}
 
 	if args[0] == "help" {
-		help(templates, cmds, args[1:])
+		if help(templates, cmds, args[1:]) {
+			Exit(0)
+		} else {
+			Exit(1)
+		}
 		return
 	}
 
@@ -62,14 +69,14 @@ func Usage(cmds Commands, templates Templates) {
 // help controls the "help" pseudo-command. It will print the usage message if
 // given an empty list of arguments. It prints the associated help text if given
 // a signle argument. And otherwise exists with an error.
-func help(templates Templates, cmds Commands, args []string) {
+func help(templates Templates, cmds Commands, args []string) bool {
 	if len(args) == 0 {
 		Usage(cmds, templates)
-		return
+		return true
 	}
 	if len(args) != 1 {
 		fmt.Fprintf(os.Stderr, helpTooManyArgs)
-		Exit(1)
+		return false
 	}
 
 	arg := args[0]
@@ -77,10 +84,10 @@ func help(templates Templates, cmds Commands, args []string) {
 	for _, cmd := range cmds {
 		if cmd.Name() == arg {
 			templates.Command.Render(os.Stdout, cmd.Data())
-			return
+			return true
 		}
 	}
 
 	fmt.Fprintf(os.Stderr, unknownHelpTopic, arg)
-	Exit(1)
+	return false
 }
